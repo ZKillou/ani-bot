@@ -9,15 +9,17 @@ client.on("ready", () => {
 })
 
 client.on("messageCreate", async message => {
-	if(message.content == "!getlist"){
-		const animes = await getWatchList()
+	const args = message.content.split(/ +/gi)
+	const commandName = args.shift()
+	
+	if(commandName == "!getlist"){
+		const userName = args.join(" ")
+		
+		const animes = await getWatchList(userName)
 		if(!animes) return message.reply({ content: "pov : le bot fonctionne pas" })
 		const att = await generateWatchListCanvas(animes)
 		message.reply({ files: [att] })
-	} else if(message.content.startsWith("!getanime")){
-		const args = message.content.split(/ +/gi)
-		args.shift()
-		
+	} else if(commandName == "!getanime"){
 		const search = args.join(" ")
 		const msg = await message.reply({ content: "ça charge attend 2 sec" })
 		const animes = await getAnime(search)

@@ -4,7 +4,8 @@ Canvas.registerFont("./font/Ubuntu.ttf", { family: "ubuntu" });
 const { AttachmentBuilder } = require("discord.js")
 const moment = require("moment")
 moment.locale("fr")
-const userName = process.env.USERNAME
+const { resolveSeason, resolveFormat } = require("./resolver")
+const defaultUserName = process.env.USERNAME
 
 const getWatchListQuery = `
 query getWatchList($userName: String) {
@@ -46,7 +47,8 @@ query getWatchList($userName: String) {
 `
 
 module.exports = {
-	getWatchList: async () => {
+	getWatchList: async (userName) => {
+		if(!userName) userName = defaultUserName
 		const response = await fetch("https://graphql.anilist.co/", {
 			method: "POST",
 			headers: {
@@ -132,7 +134,7 @@ module.exports = {
 			lastY += metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
 			
 			// Dessine la saison
-			txt = `${data[i].media.season} ${data[i].media.seasonYear} • ${data[i].media.format} (${data[i].media.duration} min)`
+			txt = `${resolveSeason(data[i].media.season)} ${data[i].media.seasonYear} • ${resolveFormat(data[i].media.format)} (${data[i].media.duration} min)`
 			ctx.fillText(txt, x + ((widthRect - width) / 2) + width, lastY + 15)
 			metrics = ctx.measureText(txt)
 			lastY += 15 + metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
