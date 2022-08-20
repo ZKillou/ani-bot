@@ -1,7 +1,7 @@
 # Ani-Bot
 
-1. Install the dependencies with `npm i`
-2. Fill the .env file with your token and AniList username
-3. Launch the bot with `node .`
+1. Installer les dépendances avec `npm i`
+2. Remplir le fichier .env avec votre token et votre nom d'utilisateur sur AniList
+3. Lancer le bot avec `node .`
 
 *Contact :* Creeper#0400

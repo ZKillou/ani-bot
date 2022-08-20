@@ -29,7 +29,7 @@ query getAnime($search: String) {
 			episodes
 			duration
 			coverImage {
-				large
+				extraLarge
 				color
 			}
 			genres
@@ -78,7 +78,7 @@ module.exports = {
 function generateEmbed(anime) {
 	return new EmbedBuilder()
 		.setColor(anime.coverImage.color)
-		.setImage(anime.coverImage.large)
+		.setImage(anime.coverImage.extraLarge)
 		.setTitle(anime.title.english ?? anime.title.romaji ?? anime.title.native)
 		.setURL(anime.siteUrl)
 		.setFooter({ text: anime.genres.join(", ") })
@@ -92,11 +92,11 @@ function generateEmbed(anime) {
 			inline: true
 		}, {
 			name: "Épisodes",
-			value: `> 🎞 Nombre d'épisode : ${anime.episodes}\n> 🕑 Durée : ${anime.duration} min\n> 🎬 Statut : ${anime.status}${anime.nextAiringEpisode ? `\n\n> 📺 Prochain épisode (${anime.nextAiringEpisode.episode}) : ${moment(new Date(anime.nextAiringEpisode.airingAt * 1000).toISOString()).format("ddd DD MMM YYYY à LT")}` : ""}`,
+			value: `> 🎞 Nombre d'épisode : ${anime.episodes ?? "?"}\n> 🕑 Durée : ${anime.duration} min\n> 🎬 Statut : ${anime.status}${anime.nextAiringEpisode ? `\n\n> 📺 Prochain épisode (${anime.nextAiringEpisode.episode}) : ${moment(new Date(anime.nextAiringEpisode.airingAt * 1000).toISOString()).format("ddd DD MMM YYYY à LT")}` : ""}`,
 			inline: true
 		}, {
 			name: "Statistiques",
-			value: `> ⭐ Score : ${anime.averageScore}%\n> ❤ Favoris : ${anime.favourites}\n> 👥 Popularité : Dans la liste de ${anime.popularity} membres`,
+			value: `> ⭐ Score : ${anime.averageScore ?? 0}%\n> ❤ Favoris : ${anime.favourites ?? 0}\n> 👥 Popularité : Dans la liste de ${anime.popularity ?? 0} membres`,
 			inline: true
 		})
 }
