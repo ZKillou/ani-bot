@@ -60,4 +60,17 @@ module.exports = {
 		if(relation == "OTHER") return "Autre"
 		return relation
 	},
+	
+	resolveType: (type) => {
+		if(type == "ANIME") return "Anime"
+		if(type == "MANGA") return "Manga"
+		return type
+	},
+	
+	resolveRole: (role) => {
+		if(role == "MAIN") return "Principal"
+		if(role == "SUPPORTING") return "Support"
+		if(role == "BACKGROUND") return "Arrière-plan"
+		return role
+	},
 }

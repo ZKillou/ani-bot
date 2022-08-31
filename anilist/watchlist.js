@@ -113,25 +113,25 @@ module.exports = {
 			// Defaults
 			let metrics = null
 			let txt = ""
+			let ro = true
 			
 			// Dessine le titre
 			ctx.fillStyle = data[i].media.coverImage.color
 			ctx.font = "60px 'ubuntu'"
 			ctx.textAlign = "center"
 			ctx.textBaseline = 'middle'
-			lastY += 45 + printAtWordWrap(ctx, data[i].media.title.english, x + ((widthRect - width) / 2) + width, y + 45, 10, widthRect - width)
-			
-			/*txt = data[i].media.title.english
-			ctx.fillText(txt, x + ((widthRect - width) / 2) + width, y + 45)
-			metrics = ctx.measureText(txt)
-			lastY += 45 + metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent*/
+			if(!data[i].media.title.english) {
+				txt = data[i].media.title.romaji
+				ro = false
+			} else txt = data[i].media.title.english
+			lastY += 45 + printAtWordWrap(ctx, txt, x + ((widthRect - width) / 2) + width, y + 45, 10, widthRect - width)
 			
 			ctx.fillStyle = "#FFFFFF"
 			ctx.font = "40px 'ubuntu'"
-			txt = data[i].media.title.romaji
-			ctx.fillText(txt, x + ((widthRect - width) / 2) + width, lastY)
-			metrics = ctx.measureText(txt)
-			lastY += metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
+			if(ro) {
+				txt = data[i].media.title.romaji
+				lastY += printAtWordWrap(ctx, txt, x + ((widthRect - width) / 2) + width, lastY, 10, widthRect - width)
+			}
 			
 			// Dessine la saison
 			txt = `${resolveSeason(data[i].media.season)} ${data[i].media.seasonYear} • ${resolveFormat(data[i].media.format)} (${data[i].media.duration} min)`
@@ -191,7 +191,7 @@ function printAtWordWrap(context, text, x, y, lineHeight, fitWidth) {
                 idx=2;
             }
             let txt = words.slice(0, idx - 1).join(' ')
-            context.fillText(txt, x, y + (lineHeight * currentLine));
+            context.fillText(txt, x, y + length);
             let metrics = context.measureText(txt)
             length += metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + lineHeight
             currentLine++;
@@ -201,7 +201,7 @@ function printAtWordWrap(context, text, x, y, lineHeight, fitWidth) {
     }
     if (idx > 0) {
     	let txt = words.join(' ')
-    	context.fillText(txt, x, y + (lineHeight*currentLine));
+    	context.fillText(txt, x, y + length);
 	    let metrics = context.measureText(txt)
 		length += metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + lineHeight
     }

@@ -2,7 +2,7 @@ const fetch = require("node-fetch")
 const { ActionRowBuilder, EmbedBuilder, SelectMenuBuilder, SelectMenuOptionBuilder } = require("discord.js")
 const moment = require("moment")
 moment.locale("fr")
-const { resolveSeason, resolveFormat, resolveStatus, resolveSource, resolveRelation } = require("./resolver")
+const { resolveSeason, resolveFormat, resolveStatus, resolveSource, resolveRelation, resolveType, resolveRole } = require("./resolver")
 
 const numbers = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
 const getAnimeQuery = `
@@ -52,6 +52,7 @@ query getAnime($search: String) {
 							english
 							romaji
 						}
+						type
 					}
 					relationType
 				}
@@ -161,9 +162,9 @@ function generateEmbed(anime, type) {
 			inline: true
 		})
 	if(type == "rel") return e
-		.setDescription(anime.relations && anime.relations.edges.length ? anime.relations.edges.map(a => `${a.node.title.english ? `> 🇺🇲 Nom anglais : ${a.node.title.english}\n` : ""}> 🌍 Nom en romaji : ${a.node.title.romaji}\n> 🔗 Lien : ${resolveRelation(a.relationType)}`).join("\n\n") : "")
+		.setDescription(anime.relations && anime.relations.edges.length ? anime.relations.edges.map(a => `> 🌀 Type : ${resolveType(a.node.type)}\n${a.node.title.english ? `> 🇺🇲 Nom anglais : ${a.node.title.english}\n` : ""}> 🌍 Nom en romaji : ${a.node.title.romaji}\n> 🔗 Lien : ${resolveRelation(a.relationType)}`).join("\n\n") : "")
 	if(type == "chars") return e
-		.setDescription(anime.characters.edges.map(c => `> 👤 Nom : ${c.name ?? c.node.name.full}\n> 🏷 Role : ${c.role}\n> 🗣 Doubleur JP : [${c.voiceActors[0].name.full}](${c.voiceActors[0].siteUrl})`).join("\n\n"))
+		.setDescription(anime.characters.edges.map(c => `> 👤 Nom : ${c.name ?? c.node.name.full}\n> 🏷 Role : ${resolveRole(c.role)}\n> 🗣 Doubleur JP : [${c.voiceActors[0].name.full}](${c.voiceActors[0].siteUrl})`).join("\n\n"))
 	if(type == "staff") return e
 		.setDescription(anime.staff.edges.map(s => `> 👤 Nom : ${s.node.name.full}\n> 🏷 Role : ${s.role}`).join("\n\n"))
 	return null
