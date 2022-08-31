@@ -159,9 +159,11 @@ module.exports = {
 			metrics = ctx.measureText(txt)
 			lastY += 15 + metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
 			
-			ctx.fillStyle = data[i].media.coverImage.color
-			drawStar(ctx, x + ((widthRect - width) / 2) + width + 25, lastY + 20, 5, 30, 15)
-			ctx.fillText(data[i].score, x + ((widthRect - width) / 2) + width - 25, lastY + 20)
+			if(data[i].score) {
+				ctx.fillStyle = data[i].media.coverImage.color
+				drawStar(ctx, x + ((widthRect - width) / 2) + width + 25, lastY + 20, 5, 30, 15)
+				ctx.fillText(data[i].score, x + ((widthRect - width) / 2) + width - 25, lastY + 20)
+			}
 			
 			// Augmente les valeurs
 			y += height + 10
