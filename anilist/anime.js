@@ -85,8 +85,11 @@ query getAnime($search: String) {
 				}
 			}
 			studios {
-				nodes {
-					name
+				edges {
+					node {
+						name
+					}
+					isMain
 				}
 			}
 			siteUrl
@@ -150,11 +153,11 @@ function generateEmbed(anime, type) {
 			inline: true
 		}, {
 			name: "Épisodes",
-			value: `> 🎞 Nombre d'épisode : ${anime.episodes ?? "?"}\n> 🕑 Durée : ${anime.duration} min\n> 🎬 Statut : ${resolveStatus(anime.status)}${anime.nextAiringEpisode ? `\n\n> 📺 Prochain épisode (${anime.nextAiringEpisode.episode}) : ${moment(new Date(anime.nextAiringEpisode.airingAt * 1000).toISOString()).format("ddd DD MMM YYYY à LT")}` : ""}`,
+			value: `> 🎞 Nombre d'épisodes : ${anime.episodes ?? "?"}\n> 🕑 Durée : ${anime.duration} min\n> 🎬 Statut : ${resolveStatus(anime.status)}${anime.nextAiringEpisode ? `\n\n> 📺 Prochain épisode (${anime.nextAiringEpisode.episode}) : ${moment(new Date(anime.nextAiringEpisode.airingAt * 1000).toISOString()).format("ddd DD MMM YYYY à LT")}` : ""}`,
 			inline: true
 		}, {
 			name: "Informations",
-			value: `> 🖥 Format : ${resolveFormat(anime.format)}\n> ℹ Source : ${resolveSource(anime.source)}\n> 🎬 Studios : ${anime.studios.nodes.map(s => s.name).join(", ")}`,
+			value: `> 🖥 Format : ${resolveFormat(anime.format)}\n> ℹ Source : ${resolveSource(anime.source)}\n> 💿 Studios : ${anime.studios.edges.filter(s => s.isMain).map(s => s.node.name).join(", ")}\n> 🎥 Producteurs : ${anime.studios.edges.filter(s => !s.isMain).map(s => s.node.name).join(", ") ?? "?"}`,
 			inline: true
 		}, {
 			name: "Statistiques",
