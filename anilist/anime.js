@@ -153,7 +153,7 @@ function generateEmbed(anime, type) {
 			inline: true
 		}, {
 			name: "Épisodes",
-			value: `> 🎞 Nombre d'épisodes : ${anime.episodes ?? "?"}\n> 🕑 Durée : ${anime.duration} min\n> 🎬 Statut : ${resolveStatus(anime.status)}${anime.nextAiringEpisode ? `\n\n> 📺 Prochain épisode (${anime.nextAiringEpisode.episode}) : ${moment(new Date(anime.nextAiringEpisode.airingAt * 1000).toISOString()).format("ddd DD MMM YYYY à LT")}` : ""}`,
+			value: `> 🎞 Nombre d'épisodes : ${anime.episodes ?? "?"}\n${anime.duration ? `> 🕑 Durée : ${anime.duration} min\n` : ""}> 🎬 Statut : ${resolveStatus(anime.status)}${anime.nextAiringEpisode ? `\n\n> 📺 Prochain épisode (${anime.nextAiringEpisode.episode}) : ${moment(new Date(anime.nextAiringEpisode.airingAt * 1000).toISOString()).format("ddd DD MMM YYYY à LT")}` : ""}`,
 			inline: true
 		}, {
 			name: "Informations",

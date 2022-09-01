@@ -2,6 +2,7 @@ require("dotenv").config()
 const { Client } = require("discord.js")
 const client = new Client({ intents: 33281 })
 const { getWatchList, generateWatchListCanvas } = require("./anilist/watchlist")
+const { getPlansList, generatePlansListCanvas } = require("./anilist/plans")
 const { getAnime, loadCommand } = require("./anilist/anime")
 
 client.on("ready", () => {
@@ -18,6 +19,13 @@ client.on("messageCreate", async message => {
 		const animes = await getWatchList(userName)
 		if(!animes) return message.reply({ content: "pov : le bot fonctionne pas" })
 		const att = await generateWatchListCanvas(animes)
+		message.reply({ files: [att] })
+	} else if(commandName == "!getplans"){
+		const userName = args.join(" ")
+		
+		const animes = await getPlansList(userName)
+		if(!animes) return message.reply({ content: "pov : le bot fonctionne pas" })
+		const att = await generatePlansListCanvas(animes)
 		message.reply({ files: [att] })
 	} else if(commandName == "!getanime"){
 		const search = args.join(" ")

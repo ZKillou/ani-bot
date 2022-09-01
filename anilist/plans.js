@@ -4,34 +4,27 @@ Canvas.registerFont("./font/Ubuntu.ttf", { family: "ubuntu" });
 const { AttachmentBuilder } = require("discord.js")
 const moment = require("moment")
 moment.locale("fr")
-const { resolveSeason, resolveFormat } = require("./resolver")
+const { resolveSeason, resolveFormat, resolveStatus } = require("./resolver")
 const defaultUserName = process.env.USERNAME
 
-const getWatchListQuery = `
-query getWatchList($userName: String) {
-	MediaListCollection(userName: $userName, type: ANIME, status: CURRENT) {
+const getPlansListQuery = `
+query getPlansList($userName: String) {
+	MediaListCollection(userName: $userName, type: ANIME, status: PLANNING) {
 		lists {
 			entries {
-				progress
-				score (format: POINT_10)
-				startedAt {
-					year
-					month
-					day
-				}
-				updatedAt
 				media {
 					title {
 						english
 						romaji
 					}
 					format
+					status
 					season
 					seasonYear
 					episodes
 					duration
 					coverImage {
-						large
+						medium
 						color
 					}
 					nextAiringEpisode {
@@ -46,7 +39,7 @@ query getWatchList($userName: String) {
 `
 
 module.exports = {
-	getWatchList: async (userName) => {
+	getPlansList: async (userName) => {
 		if(!userName) userName = defaultUserName
 		const response = await fetch("https://graphql.anilist.co/", {
 			method: "POST",
@@ -54,28 +47,43 @@ module.exports = {
 				'Content-Type': 'application/json',
 				'Accept': 'application/json'
 			},
-			body: JSON.stringify({ query: getWatchListQuery, variables: { userName } })
+			body: JSON.stringify({ query: getPlansListQuery, variables: { userName } })
 		})
 		
 		const body = await response.json()
 		if(!response.ok) return null
-		return body.data.MediaListCollection.lists[0].entries.sort((a,b) => (b.progress / b.media.episodes) - (a.progress / a.media.episodes))
+		return body.data.MediaListCollection.lists[0].entries
 	},
 	
-	generateWatchListCanvas: async (data) => {
+	generatePlansListCanvas: async (data) => {
 		let x = 20
 		let y = 10
-		let width = 500
-		let height = 705
+		let width = 200
+		let height = 282
 		let radius = 20
-		let widthRect = 1500
+		let widthRect = 2000
 		
 		const canvas = Canvas.createCanvas(widthRect + (x * 2), 20 + data.length * (height + 10))
 		const ctx = canvas.getContext("2d")
 		
 		for(let i = 0; i < data.length; i++){
-			const cover = await Canvas.loadImage(data[i].media.coverImage.large)
+			const cover = await Canvas.loadImage(data[i].media.coverImage.medium)
 			let lastY = y
+			
+			let status = ""
+			switch(data[i].media.status){
+				case "FINISHED":
+					status = "#0068FF"
+					break
+				case "RELEASING":
+					status = "#2DDA00"
+					break
+				case "NOT_YET_RELEASED":
+				case "CANCELLED":
+				default:
+					status = "#FF0400"
+					break
+			}
 			
 			// Dessine le rectangle
 			ctx.fillStyle = "#181818"
@@ -132,43 +140,24 @@ module.exports = {
 				lastY += printAtWordWrap(ctx, txt, x + ((widthRect - width) / 2) + width, lastY, 10, widthRect - width)
 			}
 			
-			// Dessine la saison
-			txt = `${resolveSeason(data[i].media.season)} ${data[i].media.seasonYear} • ${resolveFormat(data[i].media.format)} (${data[i].media.duration} min)`
+			// Dessine les infos complémentaires
+			txt = `${data[i].media.season ? `${resolveSeason(data[i].media.season)} ${data[i].media.seasonYear} • ` : ""}${resolveFormat(data[i].media.format)}${data[i].media.duration ? ` (${data[i].media.duration} min)` : ""}${data[i].media.episodes ? ` • ${data[i].media.episodes} épisode${data[i].media.episodes == 1 ? "" : "s"}` : ""}`
 			ctx.fillText(txt, x + ((widthRect - width) / 2) + width, lastY + 15)
 			metrics = ctx.measureText(txt)
 			lastY += 15 + metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
 			
-			// USER RELATED
-			lastY += 40
-			
-			txt = `Épisode : ${data[i].progress}/${data[i].media.episodes}`
-			ctx.fillText(txt, x + ((widthRect - width) / 2) + width, lastY)
+			// Dessine le status de l'anime
+			ctx.fillStyle = status
+			txt = data[i].media.nextAiringEpisode ? `Épisode ${data[i].media.nextAiringEpisode.episode} le ${moment(new Date(data[i].media.nextAiringEpisode.airingAt * 1000).toISOString()).format("ddd DD MMM YYYY à LT")}` : resolveStatus(data[i].media.status)
+			ctx.fillText(txt, x + ((widthRect - width) / 2) + width, lastY + 25)
 			metrics = ctx.measureText(txt)
-			lastY += metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
-			
-			if(data[i].media.nextAiringEpisode) {
-				txt = `Épisode ${data[i].media.nextAiringEpisode.episode} le ${moment(new Date(data[i].media.nextAiringEpisode.airingAt * 1000).toISOString()).format("ddd DD MMM YYYY à LT")}`
-				ctx.fillText(txt, x + ((widthRect - width) / 2) + width, lastY + 15)
-				metrics = ctx.measureText(txt)
-				lastY += 15 + metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
-			}
-			
-			txt = `Commencé le ${moment(`${data[i].startedAt.year}-${addZeros(data[i].startedAt.month, 2)}-${addZeros(data[i].startedAt.day, 2)}`).format("ddd DD MMM YYYY")}`
-			ctx.fillText(txt, x + ((widthRect - width) / 2) + width, lastY + 15)
-			metrics = ctx.measureText(txt)
-			lastY += 15 + metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
-			
-			if(data[i].score) {
-				ctx.fillStyle = data[i].media.coverImage.color
-				drawStar(ctx, x + ((widthRect - width) / 2) + width + 25, lastY + 20, 5, 30, 15)
-				ctx.fillText(data[i].score, x + ((widthRect - width) / 2) + width - 25, lastY + 20)
-			}
+			lastY += 25 + metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent
 			
 			// Augmente les valeurs
 			y += height + 10
 		}
 		
-		return new AttachmentBuilder(canvas.toBuffer(), { name: "feur.png" })
+		return new AttachmentBuilder(canvas.toBuffer(), { name: "feur2.png" })
 	}
 }
 
@@ -207,35 +196,4 @@ function printAtWordWrap(context, text, x, y, lineHeight, fitWidth) {
 		length += metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent + lineHeight
     }
     return length
-}
-
-function drawStar(ctx,cx,cy,spikes,outerRadius,innerRadius){
-  let rot=Math.PI/2*3;
-  let x=cx;
-  let y=cy;
-  let step=Math.PI/spikes;
-
-  ctx.beginPath();
-  ctx.moveTo(cx,cy-outerRadius)
-  for(i=0;i<spikes;i++){
-    x=cx+Math.cos(rot)*outerRadius;
-    y=cy+Math.sin(rot)*outerRadius;
-    ctx.lineTo(x,y)
-    rot+=step
-
-    x=cx+Math.cos(rot)*innerRadius;
-    y=cy+Math.sin(rot)*innerRadius;
-    ctx.lineTo(x,y)
-    rot+=step
-  }
-  ctx.lineTo(cx,cy-outerRadius);
-  ctx.closePath();
-  ctx.lineWidth=5;
-  ctx.fill();
-}
-
-function addZeros(value, zeros){
-	value = `${value}`
-	for(let i = value.length; i < zeros; i++) value = `0${value}`
-	return value
 }
